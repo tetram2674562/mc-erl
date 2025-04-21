@@ -31,13 +31,13 @@ decrypt(Socket, Key, IVec, BytesCount, Return) ->
         {ok, <<Bin>>=B} ->
             %mc_erl_protocol:print_hex(Bin),
             Cipher = <<Bin, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0>>,
-            Text = crypto:block_decrypt(aes_cfb128, Key, IVec, Cipher),
+            Text = crypto:crypto_one_time(aes_cfb128, Key, IVec, Cipher,false),
 
             %mc_erl_protocol:print_hex(Text),
 
             <<Ret:1/binary, _/binary>> = Text,
-            decrypt(Socket, Key, gen_ivec(IVec, B), BytesCount-1, [Ret|Return])
-    end.
+           decrypt(Socket, Key, gen_ivec(IVec, B), BytesCount-1, [Ret|Return])
+   end.
 
 encrypt(Socket, Key, IVec, Text) when is_binary(Text) ->
     encrypt(Socket, Key, IVec, binary_to_list(Text), []).
@@ -45,11 +45,10 @@ encrypt(Socket, Key, IVec, Text) when is_binary(Text) ->
 encrypt(_, _, IVec, [], Return) ->
     {lists:reverse(Return), IVec};
 encrypt(Socket, Key, IVec, [Text|Rest], Return) ->
-    Cipher = crypto:block_encrypt(aes_cfb128, Key, IVec,
-                                  <<Text, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0>>),
+    Cipher = crypto:crypto_one_time(aes_cfb128, Key, IVec,
+                                  <<Text, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0>>,true),
     <<Ret:1/binary, _/binary>> = Cipher,
     encrypt(Socket, Key, gen_ivec(IVec, Ret), Rest, [Ret|Return]).
-
 
 gen_ivec(OldIVec, Data) when byte_size(Data) =:= 1 ->
     %L = size(Data),

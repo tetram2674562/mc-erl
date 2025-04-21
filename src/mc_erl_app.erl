@@ -18,13 +18,13 @@ start(_StartType, _StartArgs) ->
 
 stop(_State) -> mc_erl_server_sup:shutdown().
 
-%% to be called from OS' command line
+-spec os_setup() -> no_return().
 os_setup() ->
     ok = mnesia:create_schema([node()]),
     mnesia:start(),
     {atomic, ok} = setup(),
     mnesia:stop(),
-    halt().
+    halt(0).
 
 %% to be called from OS' command line
 os_run() ->

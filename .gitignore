@@ -14,3 +14,11 @@ ebin/*
 deps/*
 Mnesia.*
 .eunit/*
+/ebin/
+.rebar
+.settings
+_build
+.eunit
+log
+.project
+rebar.lock
