@@ -193,8 +193,8 @@ handle_cast(Req, State) ->
                                 lager:notice("Issued command ~p~n",[Message]),
                                 State;
                             _ ->
-                            lager:notice("[~p]: ~p~n",[State#state.player#player.name,Message]),
-                            mc_erl_chat:broadcast(State#state.player, Message)
+                                lager:notice("[~p]: ~p~n",[State#state.player#player.name,Message]),
+                                mc_erl_chat:broadcast(State#state.player, Message)
                         
                         end,
                         State;
