@@ -187,8 +187,19 @@ handle_cast(Req, State) ->
                        State;
 
                    {packet, {chat_message, [Message]}} ->
-                       mc_erl_chat:broadcast(State#state.player, Message),
-                       State;
+                    
+                        case Message of 
+                            [FirstLetter | _] when FirstLetter == 47 -> 
+                                lager:notice("Issued command ~p~n",[Message]),
+                                State;
+                            _ ->
+                            lager:notice("[~p]: ~p~n",[State#state.player#player.name,Message]),
+                            mc_erl_chat:broadcast(State#state.player, Message)
+                        
+                        end,
+                        State;
+                        
+                    
 
                    {packet, {animation, [MyEid, AnimationId]}} ->
                        mc_erl_entity_manager:broadcast_local(MyEid, {animate, MyEid, AnimationId}),
