@@ -12,7 +12,6 @@
 % gen_server callbacks
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
 
--record(state, {next_eid=0}).
 
 start_link() -> gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
 stop() -> gen_server:cast(?MODULE, stop).
@@ -76,10 +75,10 @@ init([]) ->
         {atomic, ok} -> ok;
         {aborted,{already_exists,entity}} -> ok
     end,
-    {ok, #state{}}.
+    {ok, #estate{}}.
 
 handle_call({register_player, Player, Logic}, _From, State) when is_record(Player, player), is_pid(Logic) ->
-    Eid = State#state.next_eid,
+    Eid = State#estate.next_eid,
     NewPlayer = escape_player_name(Player#player{eid=Eid}, Eid),
     case get_player(NewPlayer#player.name) of
         [_] -> {reply, {error, name_in_use}, State};
@@ -87,7 +86,7 @@ handle_call({register_player, Player, Logic}, _From, State) when is_record(Playe
             Entity = #entity{eid=Eid, name=NewPlayer#player.name, type=player, logic=Logic, location = NewPlayer#player.location},
             {atomic, ok} = mnesia:transaction(fun() -> mnesia:write(Entity) end),
             broadcast({new_entity, Entity}),
-            {reply, NewPlayer, State#state{next_eid=Eid+1}}
+            {reply, NewPlayer, State#estate{next_eid=Eid+1}}
     end;
 
 handle_call({delete_player, Name}, _From, State) when is_list(Name) ->
@@ -113,12 +112,12 @@ handle_call({delete_player, Player}, _From, State) when is_record(Player, player
 
 % register_dropped_item
 handle_call({register_dropped_item, Entity, InitialVelocity, Logic}, _From, State) ->
-    Eid = State#state.next_eid,
+    Eid = State#estate.next_eid,
     NewEntity = Entity#entity{eid=Eid, logic=Logic},
     {atomic, ok} = mnesia:transaction(fun() -> mnesia:write(NewEntity) end),
     broadcast({new_entity, NewEntity}),
     broadcast({set_entity_speed, NewEntity, InitialVelocity}),
-    {reply, NewEntity, State#state{next_eid=Eid+1}};
+    {reply, NewEntity, State#estate{next_eid=Eid+1}};
 
 handle_call(Message, _From, State) ->
     case Message of

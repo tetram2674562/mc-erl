@@ -7,8 +7,6 @@
 
 -include("records.hrl").
 
--record(state, {listen, public_key, private_key}).
-
 -include_lib("public_key/include/OTP-PUB-KEY.hrl").
 
 
@@ -38,7 +36,7 @@ init([]) ->
                                          {packet, raw}, {nodelay, true}]),
     spawn_link(fun() -> acceptor(Listen) end),
     spawn_link(fun() -> ticker() end),
-    {ok, #state{listen=Listen, public_key=PublicKey, private_key=PrivateKey}}.
+    {ok, #server_state{listen=Listen, public_key=PublicKey, private_key=PrivateKey}}.
 
 acceptor(Listen) ->
     lager:debug("[~s:acceptor] awaiting connection...~n", [?MODULE]),
@@ -61,7 +59,7 @@ handle_call(Message, _From, State) ->
     {noreply, State}.
 
 handle_cast({new_connection, Socket}, State) ->
-    Pid = proc_lib:start(mc_erl_player_core, init_player, [Socket, State#state.public_key, State#state.private_key]),
+    Pid = proc_lib:start(mc_erl_player_core, init_player, [Socket, State#server_state.public_key, State#server_state.private_key]),
     gen_tcp:controlling_process(Socket, Pid),
     {noreply, State};
 

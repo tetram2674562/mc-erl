@@ -6,9 +6,7 @@
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2,
          code_change/3]).
 
--record(state, {writer, player, mode=creative, chunks=none, cursor_item=empty,
-                logged_in=false, known_entities=dict:new(), last_tick,
-                pos={0.5, 70, 0.5, 0, 0}}).
+
 
 -record(ke_metadata, {relocations=0}).
 
@@ -189,15 +187,17 @@ handle_cast(Req, State) ->
                    {packet, {chat_message, [Message]}} ->
                     
                         case Message of 
-                            [FirstLetter | _] when FirstLetter == 47 -> 
+                            [FirstLetter | Cmd] when FirstLetter == 47 -> 
                                 lager:notice("Issued command ~p~n",[Message]),
-                                State;
+                                lager:notice("~p~n",[State#state.player#player.mode]),
+                                New_State = mc_erl_command_handler:execute_command(State,Cmd),
+                                lager:notice("~p~n",[New_State#state.player#player.mode]),
+                                New_State;
                             _ ->
                                 lager:notice("[~p]: ~p~n",[State#state.player#player.name,Message]),
-                                mc_erl_chat:broadcast(State#state.player, Message)
-                        
-                        end,
-                        State;
+                                mc_erl_chat:broadcast(State#state.player, Message),
+                                State    
+                        end;
                         
                     
 

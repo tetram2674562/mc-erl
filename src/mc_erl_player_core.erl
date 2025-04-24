@@ -2,7 +2,7 @@
 
 -module(mc_erl_player_core).
 -export([init_player/3, keep_alive_sender/1, write/2]).
-
+-include("records.hrl").
 -include_lib("public_key/include/public_key.hrl").
 
 init_player(Socket, PublicKey, PrivateKey) when is_record(PrivateKey, 'RSAPrivateKey') ->

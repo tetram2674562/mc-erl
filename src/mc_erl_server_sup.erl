@@ -4,7 +4,7 @@
 -behaviour(supervisor).
 
 -export([start_link/0, shutdown/0, init/1]).
-
+-include("records.hrl").
 init(_Args) ->
     {ok, {{one_for_one, 3, 15}, 
           [{mc_erl_config, {mc_erl_config, start_link, []},

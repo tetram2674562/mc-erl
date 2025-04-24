@@ -5,7 +5,6 @@
 -export([new/2, spawn/3]).
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
 
--record(state, {entity, velocity={0,0,0}, moving=false, last_tick}).
 
 -include("records.hrl").
 
@@ -33,10 +32,10 @@ new(Entity, Velocity) when is_record(Entity, entity), Entity#entity.type =:= dro
 init({Entity, Velocity}) ->
     process_flag(trap_exit, true),
     erlang:send_after(?life_length * 1000, self(), suicide),
-    {ok, #state{entity=mc_erl_entity_manager:register_dropped_item(Entity, Velocity), velocity=Velocity, moving=true}}.
+    {ok, #itemstate{entity=mc_erl_entity_manager:register_dropped_item(Entity, Velocity), velocity=Velocity, moving=true}}.
 
 terminate(_Reason, State) ->
-    mc_erl_entity_manager:delete_entity(State#state.entity),
+    mc_erl_entity_manager:delete_entity(State#itemstate.entity),
     ok.
 
 code_change(_OldVsn, State, _Extra) ->
@@ -57,13 +56,13 @@ handle_call(Req, _From, State) ->
     {noreply, State}.
 
 handle_cast(Req, State) ->
-    MyEntity = State#state.entity,
+    MyEntity = State#itemstate.entity,
     MyEid = MyEntity#entity.eid,
     RetState = case Req of
                    {tick, Tick} ->
-                       NewState = case State#state.moving of
+                       NewState = case State#itemstate.moving of
                                       true ->
-                                          {VX, VY, VZ} = State#state.velocity,
+                                          {VX, VY, VZ} = State#itemstate.velocity,
                                           {X, Y, Z, _, _} = MyEntity#entity.location,
 
                                           NVY = VY + ?gravity_acc,
@@ -82,12 +81,12 @@ handle_cast(Req, State) ->
                                           end,
 
                                           mc_erl_entity_manager:move_entity(MyEid, NewLocation),
-                                          State#state{entity=MyEntity#entity{location=NewLocation}, velocity=NewVelocity, moving=IsMoving, last_tick=Tick};
+                                          State#itemstate{entity=MyEntity#entity{location=NewLocation}, velocity=NewVelocity, moving=IsMoving, last_tick=Tick};
 
                                       false ->
                                           State
                                   end,
-                       UpdatedLocation = NewState#state.entity#entity.location,
+                       UpdatedLocation = NewState#itemstate.entity#entity.location,
                        if
                            (Tick rem 20) == 0 -> mc_erl_entity_manager:move_entity(MyEid, UpdatedLocation);
                            true -> ok
@@ -126,7 +125,7 @@ handle_cast(Req, State) ->
 
 pick_up_check(Entity, State) when Entity#entity.type =:= player ->
     case in_range(Entity#entity.location, State) of
-        true -> lager:notice("~p: player in range!~n", [State#state.entity#entity.eid]);
+        true -> lager:notice("~p: player in range!~n", [State#itemstate.entity#entity.eid]);
         false -> ok
     end,
     State;
@@ -134,7 +133,7 @@ pick_up_check(_, State) -> State.
 
 % ==== Checks if (a player's) location is in pick up range
 in_range({X, Y, Z, _, _}, State) ->
-    {MyX, MyY, MyZ, _, _} = State#state.entity#entity.location,
+    {MyX, MyY, MyZ, _, _} = State#itemstate.entity#entity.location,
     math:sqrt(math:pow(MyX-X,2) + math:pow(MyY-Y,2) + math:pow(MyZ-Z,2)) < ?pick_up_range.
 
 

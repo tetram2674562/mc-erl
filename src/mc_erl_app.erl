@@ -2,7 +2,7 @@
 
 -module(mc_erl_app).
 -export([setup/0, start/2, stop/1, os_setup/0, os_run/0]).
-
+-include("records.hrl").
 %% initial server setup, needs to be done only once
 setup() ->
     mc_erl_chunk_manager:setup().
